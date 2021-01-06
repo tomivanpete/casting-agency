@@ -1,14 +1,21 @@
-from flask import Flask, request, redirect, jsonify, abort
-from models import db, setup_db
+import os
+from flask import Flask
+from flask_cors import CORS
+from models import setup_db
 
-app = Flask(__name__)
-setup_db(app)
+def create_app(test_config=None):
 
-@app.route('/')
-def health_check():
-    return jsonify({
-        'status': 'online'
-    })
+    app = Flask(__name__)
+    setup_db(app)
+    CORS(app)
+
+    @app.route('/')
+    def alive():
+        return 'App is online'
+
+    return app
+
+app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
