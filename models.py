@@ -3,7 +3,7 @@ from sqlalchemy import Column, String, Integer, Date, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
 
-database_name = "casting-agency"
+database_name = "casting_agency"
 database_path = "postgres://{}/{}".format('localhost:5432', database_name)
 #database_path = os.environ['DATABASE_URL']
 
@@ -20,7 +20,7 @@ def setup_db(app, database_path=database_path):
     db.init_app(app)
     db.create_all()
 
-association_table = db.Table('movie_actors',
+movie_actors = db.Table('movie_actors',
     db.Column('actor_id', db.Integer, db.ForeignKey('actor.id'), primary_key=True),
     db.Column('movie_id', db.Integer, db.ForeignKey('movie.id'), primary_key=True)
 )
@@ -31,7 +31,7 @@ class Movie(db.Model):
     id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
     release_date = Column(Date, nullable=False)
-    actors = db.relationship('Actor', secondary=association_table, back_populates='movies')
+    actors = db.relationship('Actor', secondary=movie_actors, back_populates='movies')
 
 class Actor(db.Model):
     __tablename__ = 'actor'
@@ -39,5 +39,5 @@ class Actor(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     age = Column(Integer, nullable=False)
-    movies = db.relationship('Movie', secondary=association_table, back_populates='actors')
+    movies = db.relationship('Movie', secondary=movie_actors, back_populates='actors')
 
