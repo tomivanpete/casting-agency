@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import Column, String, Integer, Date, create_engine
+from sqlalchemy import Column, String, Integer, Date, Enum, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
 
@@ -21,8 +21,8 @@ def setup_db(app, database_path=database_path):
     db.create_all()
 
 movie_actors = db.Table('movie_actors',
-    db.Column('actor_id', db.Integer, db.ForeignKey('actor.id'), primary_key=True),
-    db.Column('movie_id', db.Integer, db.ForeignKey('movie.id'), primary_key=True)
+    db.Column('actor_id', db.Integer, db.ForeignKey('actor.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('movie_id', db.Integer, db.ForeignKey('movie.id', ondelete='CASCADE'), primary_key=True)
 )
 
 class Movie(db.Model):
@@ -31,7 +31,23 @@ class Movie(db.Model):
     id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
     release_date = Column(Date, nullable=False)
-    actors = db.relationship('Actor', secondary=movie_actors, back_populates='movies')
+    actors = db.relationship('Actor', secondary=movie_actors, back_populates='movies', cascade='all, delete', passive_deletes=True)
+
+    def __init__(self, title, release_date):
+        self.title = title
+        self.release_date = release_date
+    
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+    
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
 
 class Actor(db.Model):
     __tablename__ = 'actor'
@@ -39,5 +55,22 @@ class Actor(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     age = Column(Integer, nullable=False)
-    movies = db.relationship('Movie', secondary=movie_actors, back_populates='actors')
+    gender = Column(Enum('M', 'F', name='gender_types'))
+    movies = db.relationship('Movie', secondary=movie_actors, back_populates='actors', cascade='all, delete', passive_deletes=True)
+
+    def __init__(self, name, age, gender):
+        self.name = name
+        self.age = age
+        self.gender = gender
+    
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+    
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
 
