@@ -37,6 +37,23 @@ class Movie(db.Model):
         self.title = title
         self.release_date = release_date
     
+    def short(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'release_date': self.release_date
+        }
+    
+    def long(self):
+        formatted_actors = [actor.short() for actor in self.actors]
+        
+        return {
+            'id': self.id,
+            'title': self.title,
+            'release_date': self.release_date,
+            'actors': formatted_actors
+        }
+        
     def insert(self):
         db.session.add(self)
         db.session.commit()
@@ -63,6 +80,25 @@ class Actor(db.Model):
         self.age = age
         self.gender = gender
     
+    def short(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'age': self.age,
+            'gender': self.gender
+        }
+    
+    def long(self):
+        formatted_movies = [movie.short() for movie in self.movies]
+
+        return {
+            'id': self.id,
+            'name': self.name,
+            'age': self.age,
+            'gender': self.gender,
+            'movies': formatted_movies
+        }
+
     def insert(self):
         db.session.add(self)
         db.session.commit()

@@ -15,6 +15,17 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.database_path = 'postgres://{}/{}'.format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
+        self.actor_request = {
+            'name': 'Nicolas Cage',
+            'age': 57,
+            'gender': 'M'
+        }
+
+        self.movie_request = {
+            'title': 'The Wickerman',
+            'release_date': '2006-09-01'
+        }
+
         with self.app.app_context():
             self.db = SQLAlchemy()
             self.db.init_app(self.app)
@@ -34,14 +45,14 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
 
     def test_create_actor(self):
-        res = self.client().post('/api/actors', json={'test': 1})
+        res = self.client().post('/api/actors', json=self.actor_request)
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, 201)
     
     def test_create_movie(self):
-        res = self.client().post('/api/movies', json={'test': 1})
+        res = self.client().post('/api/movies', json=self.movie_request)
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, 201)
 
     def test_update_actor(self):
         res = self.client().patch('/api/actors/1', json={'test': 1})
