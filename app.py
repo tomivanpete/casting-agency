@@ -23,7 +23,7 @@ def create_app(test_config=None):
             end = start + ITEMS_PER_PAGE
             
             actors = Actor.query.all()
-            formatted_actors = [actor.short() for actor in actors]
+            formatted_actors = [actor.get_data() for actor in actors]
             if start > len(formatted_actors):
                 raise IndexError
 
@@ -45,7 +45,7 @@ def create_app(test_config=None):
             end = start + ITEMS_PER_PAGE
             
             movies = Movie.query.all()
-            formatted_movies = [movie.short() for movie in movies]
+            formatted_movies = [movie.get_data() for movie in movies]
             if start > len(formatted_movies):
                 raise IndexError
 
@@ -54,6 +54,37 @@ def create_app(test_config=None):
                 'movies': formatted_movies
             })
         except IndexError:
+            abort(404)
+        except BaseException:
+            abort(500)
+    
+    @app.route('/api/actors/<int:actor_id>')
+    def get_actor(actor_id):
+        try:
+            actor = Actor.query.get(actor_id)
+
+            # Will raise AttributeError if Actor with actor_id does not exist
+            return jsonify({
+                'success': True,
+                'actor': actor.get_data_with_movies()
+            })
+        except AttributeError:
+            abort(404)
+        except BaseException:
+            abort(500)
+
+    
+    @app.route('/api/movies/<int:movie_id>')
+    def get_movie(movie_id):
+        try:
+            movie = Movie.query.get(movie_id)
+
+            #  Will raise AttributeError if Movie with movie_id does not exist
+            return jsonify({
+                'success': True,
+                'movie': movie.get_data_with_actors()
+            })
+        except AttributeError:
             abort(404)
         except BaseException:
             abort(500)
