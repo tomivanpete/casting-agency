@@ -141,19 +141,90 @@ def create_app(test_config=None):
     
     @app.route('/api/actors/<int:actor_id>', methods=['PATCH'])
     def update_actor(actor_id):
-        return 'not implemented'
+        actor_to_update = Actor.query.get(actor_id)
+        if actor_to_update is None:
+            abort(404)
+
+        request_body = request.get_json()
+        name = request_body.get('name', None)
+        age = request_body.get('age', None)
+        gender = request_body.get('gender', None)
+        movie_id = request_body.get('movie_id', None)
+
+        # Accept update for name, age, or gender in the message body
+        if name:
+            actor_to_update.name = name
+        if age:
+            actor_to_update.age = age
+        if gender:
+            actor_to_update.gender = gender
+        if movie_id:
+            movie = Movie.query.get(movie_id)
+            if movie is None:
+                abort(422)
+            actor_to_update.movies.append(movie)
+
+        actor_to_update.update()
+
+        return jsonify({
+            'success': True,
+            'actor': actor_to_update.get_data_with_movies()
+        })
     
     @app.route('/api/movies/<int:movie_id>', methods=['PATCH'])
     def update_movie(movie_id):
-        return 'not implemented'
+        movie_to_update = Movie.query.get(movie_id)
+        if movie_to_update is None:
+            abort(404)
+
+        request_body = request.get_json()
+        title = request_body.get('title', None)
+        release_date = request_body.get('release_date', None)
+        actor_id = request_body.get('actor_id', None)
+
+        # Accept update for title or release date in the message body
+        if title:
+            movie_to_update.title = title
+        if release_date:
+            movie_to_update.release_date = release_date
+        if actor_id:
+            actor = Actor.query.get(actor_id)
+            if actor is None:
+                abort(422)
+            movie_to_update.actors.append(actor)
+
+        movie_to_update.update()
+
+        return jsonify({
+            'success': True,
+            'movie': movie_to_update.get_data()
+        })
     
     @app.route('/api/actors/<int:actor_id>', methods=['DELETE'])
     def delete_actor(actor_id):
-        return 'not implemented'
+        try:
+            actor = Actor.query.get(actor_id)
+            actor.delete()
+
+            return jsonify({
+                'success': True,
+                'deleted': actor_id
+            })
+        except BaseException:
+            abort(404)
 
     @app.route('/api/movies/<int:movie_id>', methods=['DELETE'])
     def delete_movie(movie_id):
-        return 'not implemented'
+        try:
+            movie = Movie.query.get(movie_id)
+            movie.delete()
+
+            return jsonify({
+                'success': True,
+                'deleted': movie_id
+            })
+        except BaseException:
+            abort(404)
 
     @app.errorhandler(400)
     def bad_request(error):
