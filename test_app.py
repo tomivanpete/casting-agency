@@ -14,11 +14,6 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.database_name = 'casting-agency-test'
         self.database_path = 'postgres://{}/{}'.format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
-
-        with self.app.app_context():
-            self.db = db
-            self.db.init_app(self.app)
-            self.db.create_all()
         
         self.actor_request = {
             'name': 'Nicolas Cage',
@@ -42,9 +37,8 @@ class CastingAgencyTestCase(unittest.TestCase):
         }
     
     def tearDown(self):
-        with self.app.app_context():
-            self.db.session.remove()
-            self.db.drop_all()
+        db.session.remove()
+        db.drop_all()
 
     def test_get_actors(self):
         res = self.client().get('/api/actors')
