@@ -4,7 +4,7 @@ import json
 from flask_sqlalchemy import SQLAlchemy
 
 from app import create_app
-from models import setup_db
+from models import db, setup_db
 
 class CastingAgencyTestCase(unittest.TestCase):
     
@@ -15,6 +15,11 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.database_path = 'postgres://{}/{}'.format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
+        with self.app.app_context():
+            self.db = db
+            self.db.init_app(self.app)
+            self.db.create_all()
+        
         self.actor_request = {
             'name': 'Nicolas Cage',
             'age': 57,
@@ -26,13 +31,20 @@ class CastingAgencyTestCase(unittest.TestCase):
             'release_date': '2006-09-01'
         }
 
-        with self.app.app_context():
-            self.db = SQLAlchemy()
-            self.db.init_app(self.app)
-            self.db.create_all()
+        self.actor_update_request = {
+            'name': 'Cicolas Nage',
+            'movies': [1]
+        }
+
+        self.movie_update_request = {
+            'title': 'The Mickerwan',
+            'actors': [1]
+        }
     
     def tearDown(self):
-        pass
+        with self.app.app_context():
+            self.db.session.remove()
+            self.db.drop_all()
 
     def test_get_actors(self):
         res = self.client().get('/api/actors')
@@ -55,21 +67,27 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 201)
 
     def test_update_actor(self):
-        res = self.client().patch('/api/actors/1', json={'test': 1})
+        self.client().post('/api/actors', json=self.actor_request)
+        self.client().post('/api/movies', json=self.movie_request)
+        res = self.client().patch('/api/actors/1', json=self.actor_update_request)
 
         self.assertEqual(res.status_code, 200)
 
     def test_update_movie(self):
-        res = self.client().patch('/api/movies/1', json={'test': 1})
+        self.client().post('/api/actors', json=self.actor_request)
+        self.client().post('/api/movies', json=self.movie_request)
+        res = self.client().patch('/api/movies/1', json=self.movie_update_request)
 
         self.assertEqual(res.status_code, 200)
     
     def test_delete_actor(self):
+        self.client().post('/api/actors', json=self.actor_request)
         res = self.client().delete('/api/actors/1')
 
         self.assertEqual(res.status_code, 200)
 
     def test_delete_movie(self):
+        self.client().post('/api/movies', json=self.movie_request)
         res = self.client().delete('/api/movies/1')
 
         self.assertEqual(res.status_code, 200)

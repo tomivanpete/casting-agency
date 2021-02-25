@@ -149,7 +149,7 @@ def create_app(test_config=None):
         name = request_body.get('name', None)
         age = request_body.get('age', None)
         gender = request_body.get('gender', None)
-        movie_id = request_body.get('movie_id', None)
+        movie_ids = request_body.get('movies', None)
 
         # Accept update for name, age, or gender in the message body
         if name:
@@ -158,11 +158,9 @@ def create_app(test_config=None):
             actor_to_update.age = age
         if gender:
             actor_to_update.gender = gender
-        if movie_id:
-            movie = Movie.query.get(movie_id)
-            if movie is None:
-                abort(422)
-            actor_to_update.movies.append(movie)
+        if movie_ids:
+            movies = [Movie.query.get(id) for id in movie_ids]
+            actor_to_update.movies = movies            
 
         actor_to_update.update()
 
@@ -180,18 +178,16 @@ def create_app(test_config=None):
         request_body = request.get_json()
         title = request_body.get('title', None)
         release_date = request_body.get('release_date', None)
-        actor_id = request_body.get('actor_id', None)
+        actor_ids = request_body.get('actors', None)
 
         # Accept update for title or release date in the message body
         if title:
             movie_to_update.title = title
         if release_date:
             movie_to_update.release_date = release_date
-        if actor_id:
-            actor = Actor.query.get(actor_id)
-            if actor is None:
-                abort(422)
-            movie_to_update.actors.append(actor)
+        if actor_ids:
+            actors = [Actor.query.get(id) for id in actor_ids]
+            movie_to_update.actors = actors
 
         movie_to_update.update()
 
