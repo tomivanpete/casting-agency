@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Movie",
+    "description": "A motion picture",
+    "type": "object",
+    "properties": {
+      "title": {
+        "description": "The title of the movie",
+        "type": "string"
+      },
+      "releaseDate": {
+        "description": "The release date of the movie",
+        "type": "string",
+        "format": "date"
+      }
+    },
+    "required": [ "title", "releaseDate" ],
+    "maxProperties": 2
+}

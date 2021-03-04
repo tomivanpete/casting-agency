@@ -6,6 +6,11 @@ from flask_sqlalchemy import SQLAlchemy
 from app import create_app
 from models import db, setup_db
 
+"""
+TODO: seed casting-agency-test DB with more test data, instead of empty DB
+TODO: add more assertions to test methods
+TODO: test pagination
+"""
 class CastingAgencyTestCase(unittest.TestCase):
     
     def setUp(self):
@@ -23,7 +28,7 @@ class CastingAgencyTestCase(unittest.TestCase):
 
         self.movie_request = {
             'title': 'The Wickerman',
-            'release_date': '2006-09-01'
+            'releaseDate': '2006-09-01'
         }
 
         self.actor_update_request = {
@@ -85,6 +90,16 @@ class CastingAgencyTestCase(unittest.TestCase):
         res = self.client().delete('/api/movies/1')
 
         self.assertEqual(res.status_code, 200)
+
+    def test_movies_post_400(self):
+        res = self.client().post('/api/movies', json={'title': 'should fail with 400', 'releaseDate': 'not a date'})
+
+        self.assertEqual(res.status_code, 400)
+
+    def test_actors_post_400(self):
+        res = self.client().post('/api/actors', json={'test': 'should fail with 400'})
+
+        self.assertEqual(res.status_code, 400)
 
 if __name__ == '__main__':
     unittest.main()

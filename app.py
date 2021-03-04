@@ -1,10 +1,19 @@
-import os, sys
-from flask import Flask, request, jsonify, abort
+import os, sys, json
+from flask import Flask, request, jsonify, abort, make_response
 from flask_cors import CORS
+from flask_expects_json import expects_json
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
+
 from models import setup_db, Movie, Actor
+from util import get_schemas, schema_validator
 
 ITEMS_PER_PAGE = 10
+SCHEMAS = get_schemas()
 
+"""
+TODO: implement authentication and permission checks
+"""
 def create_app(test_config=None):
 
     app = Flask(__name__)
@@ -90,6 +99,7 @@ def create_app(test_config=None):
             abort(500)
     
     @app.route('/api/actors', methods=['POST'])
+    @schema_validator(schema=SCHEMAS['post_actor'])
     def create_actor():
         try:
             request_body = request.get_json()
@@ -108,19 +118,16 @@ def create_app(test_config=None):
                 'success': True,
                 'created': new_actor.id
             }), 201
-        # Return a 400 error if any required fields are not present in the
-        # request body
-        except KeyError:
-            abort(400)
         except BaseException:
             abort(500)
     
     @app.route('/api/movies', methods=['POST'])
+    @schema_validator(schema=SCHEMAS['post_movie'])
     def create_movie():
         try:
             request_body = request.get_json()
             title = request_body['title']
-            release_date = request_body['release_date']
+            release_date = request_body['releaseDate']
 
             new_movie = Movie(
                 title=title,
@@ -132,14 +139,13 @@ def create_app(test_config=None):
                 'success': True,
                 'created': new_movie.id
             }), 201
-        # Return a 400 error if any required fields are not present in the
-        # request body
-        except KeyError:
+        except ValidationError:
             abort(400)
         except BaseException:
             abort(500)
     
     @app.route('/api/actors/<int:actor_id>', methods=['PATCH'])
+    @schema_validator(schema=SCHEMAS['patch_actor'])
     def update_actor(actor_id):
         actor_to_update = Actor.query.get(actor_id)
         if actor_to_update is None:
@@ -170,6 +176,7 @@ def create_app(test_config=None):
         })
     
     @app.route('/api/movies/<int:movie_id>', methods=['PATCH'])
+    @schema_validator(schema=SCHEMAS['patch_movie'])
     def update_movie(movie_id):
         movie_to_update = Movie.query.get(movie_id)
         if movie_to_update is None:
@@ -222,8 +229,16 @@ def create_app(test_config=None):
         except BaseException:
             abort(404)
 
-    @app.errorhandler(400)
+    @app.errorhandler(ValidationError)
     def bad_request(error):
+        return jsonify({
+            'success': False,
+            'error': 400,
+            'message': error.message
+        }), 400
+
+    @app.errorhandler(400)
+    def generic_bad_request(error):
         return jsonify({
             'success': False,
             'error': 400,

@@ -66,6 +66,9 @@ class Movie(db.Model):
         db.session.commit()
 
 
+"""
+TODO: update gender enum for transgender, non-binary
+"""
 class Actor(db.Model):
     __tablename__ = 'actor'
 

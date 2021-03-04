@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Actor",
+    "description": "A movie actor",
+    "type": "object",
+    "properties": {
+      "name": {
+        "description": "The actor's name",
+        "type": "string"
+      },
+      "age": {
+        "description": "The age of the actor in years",
+        "type": "integer"
+      },
+      "gender": {
+        "description": "The gender of the actor (M or F)",
+        "type": "string",
+        "enum": ["M", "F"]
+      }
+    },
+    "required": [ "name", "age", "gender" ],
+    "maxProperties": 3
+}
