@@ -1,7 +1,6 @@
 import os, sys, json
 from flask import Flask, request, jsonify, abort, make_response
 from flask_cors import CORS
-from flask_expects_json import expects_json
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
