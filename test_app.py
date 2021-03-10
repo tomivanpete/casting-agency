@@ -101,5 +101,17 @@ class CastingAgencyTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 400)
 
+    def test_actors_405(self):
+        self.client().post('/api/actors', json=self.actor_request)
+        res = self.client().put('/api/actors/1', json=self.actor_update_request)
+
+        self.assertEqual(res.status_code, 405)
+
+    def test_movies_405(self):
+        self.client().post('/api/movies', json=self.movie_request)
+        res = self.client().put('/api/movies/1', json=self.movie_update_request)
+
+        self.assertEqual(res.status_code, 405)
+
 if __name__ == '__main__':
     unittest.main()

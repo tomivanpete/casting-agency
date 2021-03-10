@@ -1,7 +1,6 @@
-import os, sys, json
-from flask import Flask, request, jsonify, abort, make_response
+import sys
+from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
-from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
 from models import setup_db, Movie, Actor
@@ -164,8 +163,16 @@ def create_app(test_config=None):
         if gender:
             actor_to_update.gender = gender
         if movie_ids:
-            movies = [Movie.query.get(id) for id in movie_ids]
-            actor_to_update.movies = movies            
+            #movies = [Movie.query.get(id) for id in movie_ids]
+            movies = []
+            for id in movie_ids:
+                movie = Movie.query.get(id)
+                if movie is not None:
+                    movies.append(movie)
+            if len(movies) > 0:
+                actor_to_update.movies = movies
+            else:
+                abort(422)
 
         actor_to_update.update()
 
@@ -183,7 +190,7 @@ def create_app(test_config=None):
 
         request_body = request.get_json()
         title = request_body.get('title', None)
-        release_date = request_body.get('release_date', None)
+        release_date = request_body.get('releaseDate', None)
         actor_ids = request_body.get('actors', None)
 
         # Accept update for title or release date in the message body
@@ -192,8 +199,16 @@ def create_app(test_config=None):
         if release_date:
             movie_to_update.release_date = release_date
         if actor_ids:
-            actors = [Actor.query.get(id) for id in actor_ids]
-            movie_to_update.actors = actors
+            #actors = [Actor.query.get(id) for id in actor_ids]
+            actors = []
+            for id in actor_ids:
+                actor = Actor.query.get(id)
+                if actor is not None:
+                    actors.append(actor)
+            if len(actors) > 0:
+                movie_to_update.actors = actors
+            else:
+                abort(422)
 
         movie_to_update.update()
 
@@ -205,6 +220,7 @@ def create_app(test_config=None):
     @app.route('/api/actors/<int:actor_id>', methods=['DELETE'])
     def delete_actor(actor_id):
         try:
+            #  Will raise AttributeError if Actor with actor_id does not exist
             actor = Actor.query.get(actor_id)
             actor.delete()
 
@@ -212,12 +228,13 @@ def create_app(test_config=None):
                 'success': True,
                 'deleted': actor_id
             })
-        except BaseException:
+        except AttributeError:
             abort(404)
 
     @app.route('/api/movies/<int:movie_id>', methods=['DELETE'])
     def delete_movie(movie_id):
         try:
+            #  Will raise AttributeError if Movie with movie_id does not exist
             movie = Movie.query.get(movie_id)
             movie.delete()
 
@@ -225,7 +242,7 @@ def create_app(test_config=None):
                 'success': True,
                 'deleted': movie_id
             })
-        except BaseException:
+        except AttributeError:
             abort(404)
 
     @app.errorhandler(ValidationError)
