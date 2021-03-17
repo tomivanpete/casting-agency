@@ -41,7 +41,7 @@ class Movie(db.Model):
         return {
             'id': self.id,
             'title': self.title,
-            'release_date': self.release_date
+            'release_date': str(self.release_date)
         }
     
     def get_data_with_actors(self):
