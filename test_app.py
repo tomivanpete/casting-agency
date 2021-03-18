@@ -2,9 +2,11 @@ import os
 import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
+from faker import Faker
+import random
 
 from app import create_app
-from models import db, setup_db
+from models import db, setup_db, Actor, Movie
 
 """
 TODO: seed casting-agency-test DB with more test data, instead of empty DB
@@ -13,37 +15,69 @@ TODO: test pagination
 """
 class CastingAgencyTestCase(unittest.TestCase):
     
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client
-        self.database_name = 'casting-agency-test'
-        self.database_path = 'postgres://{}/{}'.format('localhost:5432', self.database_name)
-        setup_db(self.app, self.database_path)
-        
-        self.actor_request = {
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.client = cls.app.test_client
+        cls.database_name = 'casting-agency-test'
+        cls.database_path = 'postgres://{}/{}'.format('localhost:5432', cls.database_name)
+        setup_db(cls.app, cls.database_path)
+        cls.create_test_data(cls)
+
+        cls.actor_request = {
             'name': 'Nicolas Cage',
             'age': 57,
             'gender': 'M'
         }
 
-        self.movie_request = {
+        cls.movie_request = {
             'title': 'The Wickerman',
             'releaseDate': '2006-09-01'
         }
 
-        self.actor_update_request = {
+        cls.actor_update_request = {
             'name': 'Cicolas Nage',
-            'movies': [1]
         }
 
-        self.movie_update_request = {
+        cls.movie_update_request = {
             'title': 'The Mickerwan',
-            'actors': [1]
         }
     
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         db.session.remove()
         db.drop_all()
+
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        pass
+
+    def create_test_data(self):
+        fake = Faker(['en_US', 'ja_JP', 'el_GR'])
+
+        for _ in range(30):
+            actor_name = fake.name()
+            actor_age = random.randint(22, 88)
+            actor_gender = random.choice(['M', 'F'])
+
+            movie_title = fake.color_name() + ' ' + fake.street_suffix()
+            movie_release_date = str(fake.date_between())
+
+            actor = Actor(actor_name, actor_age, actor_gender)
+            actor.insert()
+
+            movie = Movie(movie_title, movie_release_date)
+            movie.insert()
+        
+        for _ in range(20):
+            actors = Actor.query.all()
+            movies = Movie.query.all()
+
+            actor_to_update = random.choice(actors)
+            movie_to_update = random.choice(movies)
+            actor_to_update.movies.append(movie_to_update)
 
     def test_get_actors(self):
         res = self.client().get('/api/actors')
@@ -66,28 +100,32 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 201)
 
     def test_update_actor(self):
-        self.client().post('/api/actors', json=self.actor_request)
-        self.client().post('/api/movies', json=self.movie_request)
-        res = self.client().patch('/api/actors/1', json=self.actor_update_request)
+        actor_id = Actor.query.first().id
+        movie_id = Movie.query.first().id
+        self.actor_update_request['movies'] = [movie_id]
+        
+        res = self.client().patch('/api/actors/' + str(actor_id), json=self.actor_update_request)
 
         self.assertEqual(res.status_code, 200)
 
     def test_update_movie(self):
-        self.client().post('/api/actors', json=self.actor_request)
-        self.client().post('/api/movies', json=self.movie_request)
-        res = self.client().patch('/api/movies/1', json=self.movie_update_request)
+        actor_id = Actor.query.first().id
+        movie_id = Movie.query.first().id
+        self.movie_update_request['actors'] = [actor_id]
+
+        res = self.client().patch('/api/movies/' + str(movie_id), json=self.movie_update_request)
 
         self.assertEqual(res.status_code, 200)
     
     def test_delete_actor(self):
-        self.client().post('/api/actors', json=self.actor_request)
-        res = self.client().delete('/api/actors/1')
+        actor_id = Actor.query.first().id
+        res = self.client().delete('/api/actors/' + str(actor_id))
 
         self.assertEqual(res.status_code, 200)
 
     def test_delete_movie(self):
-        self.client().post('/api/movies', json=self.movie_request)
-        res = self.client().delete('/api/movies/1')
+        movie_id = Movie.query.first().id
+        res = self.client().delete('/api/movies/' + str(movie_id))
 
         self.assertEqual(res.status_code, 200)
 
