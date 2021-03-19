@@ -24,123 +24,99 @@ def create_app(test_config=None):
 
     @app.route('/api/actors')
     def get_actors():
-        try:
-            page = request.args.get('page', 1, type=int)
-            start = (page - 1) * ITEMS_PER_PAGE
-            end = start + ITEMS_PER_PAGE
-            
-            actors = Actor.query.all()
-            formatted_actors = [actor.get_data() for actor in actors]
-            if start > len(formatted_actors):
-                raise IndexError
-
-            return jsonify({
-                'success': True,
-                'actors': formatted_actors
-            })
-        except IndexError:
+        page = request.args.get('page', 1, type=int)
+        start = (page - 1) * ITEMS_PER_PAGE
+        end = start + ITEMS_PER_PAGE
+        
+        actors = Actor.query.all()
+        formatted_actors = [actor.get_data() for actor in actors]
+        if start > len(formatted_actors):
             abort(404)
-        except BaseException:
-            abort(500)
+
+        return jsonify({
+            'success': True,
+            'actors': formatted_actors[start:end],
+            'totalActors': len(formatted_actors)
+        })
 
 
     @app.route('/api/movies')
     def get_movies():
-        try:
-            page = request.args.get('page', 1, type=int)
-            start = (page - 1) * ITEMS_PER_PAGE
-            end = start + ITEMS_PER_PAGE
-            
-            movies = Movie.query.all()
-            formatted_movies = [movie.get_data() for movie in movies]
-            if start > len(formatted_movies):
-                raise IndexError
-
-            return jsonify({
-                'success': True,
-                'movies': formatted_movies
-            })
-        except IndexError:
+        page = request.args.get('page', 1, type=int)
+        start = (page - 1) * ITEMS_PER_PAGE
+        end = start + ITEMS_PER_PAGE
+        
+        movies = Movie.query.all()
+        formatted_movies = [movie.get_data() for movie in movies]
+        if start > len(formatted_movies):
             abort(404)
-        except BaseException:
-            abort(500)
+
+        return jsonify({
+            'success': True,
+            'movies': formatted_movies[start:end],
+            'totalMovies': len(formatted_movies)
+        })
     
     @app.route('/api/actors/<int:actor_id>')
     def get_actor(actor_id):
-        try:
-            actor = Actor.query.get(actor_id)
-
-            # Will raise AttributeError if Actor with actor_id does not exist
-            return jsonify({
-                'success': True,
-                'actor': actor.get_data_with_movies()
-            })
-        except AttributeError:
+        actor = Actor.query.get(actor_id)
+        if actor is None:
             abort(404)
-        except BaseException:
-            abort(500)
+
+        return jsonify({
+            'success': True,
+            'actor': actor.get_data_with_movies()
+        })
 
     
     @app.route('/api/movies/<int:movie_id>')
     def get_movie(movie_id):
-        try:
-            movie = Movie.query.get(movie_id)
-
-            #  Will raise AttributeError if Movie with movie_id does not exist
-            return jsonify({
-                'success': True,
-                'movie': movie.get_data_with_actors()
-            })
-        except AttributeError:
+        movie = Movie.query.get(movie_id)
+        if movie is None:
             abort(404)
-        except BaseException:
-            abort(500)
+
+        return jsonify({
+            'success': True,
+            'movie': movie.get_data_with_actors()
+        })
     
     @app.route('/api/actors', methods=['POST'])
     @schema_validator(schema=SCHEMAS['post_actor'])
     def create_actor():
-        try:
-            request_body = request.get_json()
-            name = request_body['name']
-            age = request_body['age']
-            gender = request_body['gender']
+        request_body = request.get_json()
+        name = request_body['name']
+        age = request_body['age']
+        gender = request_body['gender']
 
-            new_actor = Actor(
-                name=name,
-                age=age,
-                gender=gender
-            )
-            new_actor.insert()
+        new_actor = Actor(
+            name=name,
+            age=age,
+            gender=gender
+        )
+        new_actor.insert()
 
-            return jsonify({
-                'success': True,
-                'created': new_actor.id
-            }), 201
-        except BaseException:
-            abort(500)
+        return jsonify({
+            'success': True,
+            'created': new_actor.id
+        }), 201
     
     @app.route('/api/movies', methods=['POST'])
     @schema_validator(schema=SCHEMAS['post_movie'])
     def create_movie():
-        try:
-            request_body = request.get_json()
-            title = request_body['title']
-            release_date = request_body['releaseDate']
+        request_body = request.get_json()
+        title = request_body['title']
+        release_date = request_body['releaseDate']
 
-            new_movie = Movie(
-                title=title,
-                release_date=release_date
-            )
-            new_movie.insert()
+        new_movie = Movie(
+            title=title,
+            release_date=release_date
+        )
+        new_movie.insert()
 
-            return jsonify({
-                'success': True,
-                'created': new_movie.id
-            }), 201
-        except ValidationError:
-            abort(400)
-        except BaseException:
-            abort(500)
+        return jsonify({
+            'success': True,
+            'created': new_movie.id
+        }), 201
     
     @app.route('/api/actors/<int:actor_id>', methods=['PATCH'])
     @schema_validator(schema=SCHEMAS['patch_actor'])
@@ -163,7 +139,6 @@ def create_app(test_config=None):
         if gender:
             actor_to_update.gender = gender
         if movie_ids:
-            #movies = [Movie.query.get(id) for id in movie_ids]
             movies = []
             for id in movie_ids:
                 movie = Movie.query.get(id)
@@ -199,7 +174,6 @@ def create_app(test_config=None):
         if release_date:
             movie_to_update.release_date = release_date
         if actor_ids:
-            #actors = [Actor.query.get(id) for id in actor_ids]
             actors = []
             for id in actor_ids:
                 actor = Actor.query.get(id)
@@ -219,31 +193,29 @@ def create_app(test_config=None):
     
     @app.route('/api/actors/<int:actor_id>', methods=['DELETE'])
     def delete_actor(actor_id):
-        try:
-            #  Will raise AttributeError if Actor with actor_id does not exist
-            actor = Actor.query.get(actor_id)
-            actor.delete()
-
-            return jsonify({
-                'success': True,
-                'deleted': actor_id
-            })
-        except AttributeError:
+        actor = Actor.query.get(actor_id)
+        if actor is None:
             abort(404)
+
+        actor.delete()
+
+        return jsonify({
+            'success': True,
+            'deleted': actor_id
+        })
 
     @app.route('/api/movies/<int:movie_id>', methods=['DELETE'])
     def delete_movie(movie_id):
-        try:
-            #  Will raise AttributeError if Movie with movie_id does not exist
-            movie = Movie.query.get(movie_id)
-            movie.delete()
-
-            return jsonify({
-                'success': True,
-                'deleted': movie_id
-            })
-        except AttributeError:
+        movie = Movie.query.get(movie_id)
+        if movie is None:
             abort(404)
+        
+        movie.delete()
+
+        return jsonify({
+            'success': True,
+            'deleted': movie_id
+        })
 
     @app.errorhandler(ValidationError)
     def bad_request(error):
@@ -251,14 +223,6 @@ def create_app(test_config=None):
             'success': False,
             'error': 400,
             'message': error.message
-        }), 400
-
-    @app.errorhandler(400)
-    def generic_bad_request(error):
-        return jsonify({
-            'success': False,
-            'error': 400,
-            'message': 'Bad request'
         }), 400
 
     @app.errorhandler(404)

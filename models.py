@@ -1,7 +1,5 @@
-import os
-from sqlalchemy import Column, String, Integer, Date, Enum, create_engine
+from sqlalchemy import Column, String, Integer, Date, Enum
 from flask_sqlalchemy import SQLAlchemy
-import json
 
 database_name = "casting-agency"
 database_path = "postgres://{}/{}".format('localhost:5432', database_name)
