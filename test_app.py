@@ -1,7 +1,9 @@
+from auth import get_token_auth_header
 import unittest
 from faker import Faker
 import random
 import json
+import os
 
 from sqlalchemy.sql.expression import update
 from app import create_app
@@ -19,10 +21,15 @@ class CastingAgencyTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.app = create_app()
         cls.client = cls.app.test_client
+        
         cls.database_name = 'casting-agency-test'
         cls.database_path = 'postgres://{}/{}'.format('localhost:5432', cls.database_name)
         setup_db(cls.app, cls.database_path)
         cls.create_test_data(cls)
+
+        cls.assistant_headers = cls.get_auth_headers(cls, 'ASSISTANT_TOKEN')
+        cls.director_headers = cls.get_auth_headers(cls, 'DIRECTOR_TOKEN')
+        cls.producer_headers = cls.get_auth_headers(cls, 'PRODUCER_TOKEN')
     
     @classmethod
     def tearDownClass(cls):
@@ -78,9 +85,14 @@ class CastingAgencyTestCase(unittest.TestCase):
             actor_to_update = random.choice(actors)
             movie_to_update = random.choice(movies)
             actor_to_update.movies.append(movie_to_update)
+    
+    def get_auth_headers(self, token_name):
+        token = os.getenv(token_name, default=None)
 
+        return {'Authorization': 'Bearer ' + token}
+    
     def test_get_actors(self):
-        res = self.client().get('/api/actors')
+        res = self.client().get('/api/actors', headers=self.producer_headers)
         self.assertEqual(res.status_code, 200)
         
         res_body = json.loads(res.data)
@@ -88,7 +100,7 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.assertEqual(res_body['totalActors'], len(Actor.query.all()))
 
     def test_get_movies(self):
-        res = self.client().get('/api/movies')
+        res = self.client().get('/api/movies', headers=self.producer_headers)
         self.assertEqual(res.status_code, 200)
 
         res_body = json.loads(res.data)
@@ -96,7 +108,7 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.assertEqual(res_body['totalMovies'], len(Movie.query.all()))
 
     def test_create_actor(self):
-        res = self.client().post('/api/actors', json=self.actor_request)
+        res = self.client().post('/api/actors', headers=self.producer_headers, json=self.actor_request)
         self.assertEqual(res.status_code, 201)
 
         res_body = json.loads(res.data)
@@ -109,7 +121,7 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.assertEqual(self.actor_request['gender'], new_actor.gender)
     
     def test_create_movie(self):
-        res = self.client().post('/api/movies', json=self.movie_request)
+        res = self.client().post('/api/movies', headers=self.producer_headers, json=self.movie_request)
         self.assertEqual(res.status_code, 201)
 
         res_body = json.loads(res.data)
@@ -125,7 +137,7 @@ class CastingAgencyTestCase(unittest.TestCase):
         movie_id = Movie.query.first().id
         self.actor_update_request['movies'] = [movie_id]
         
-        res = self.client().patch('/api/actors/' + str(actor_id), json=self.actor_update_request)
+        res = self.client().patch('/api/actors/' + str(actor_id), headers=self.producer_headers, json=self.actor_update_request)
         self.assertEqual(res.status_code, 200)
 
         updated_actor = Actor.query.get(actor_id)
@@ -137,7 +149,7 @@ class CastingAgencyTestCase(unittest.TestCase):
         movie_id = Movie.query.first().id
         self.movie_update_request['actors'] = [actor_id]
 
-        res = self.client().patch('/api/movies/' + str(movie_id), json=self.movie_update_request)
+        res = self.client().patch('/api/movies/' + str(movie_id), headers=self.producer_headers, json=self.movie_update_request)
         self.assertEqual(res.status_code, 200)
 
         updated_movie = Movie.query.get(movie_id)
@@ -148,7 +160,7 @@ class CastingAgencyTestCase(unittest.TestCase):
         actor_to_delete = Actor.query.first()
         movie_ids = [movie.id for movie in actor_to_delete.movies]
 
-        res = self.client().delete('/api/actors/' + str(actor_to_delete.id))
+        res = self.client().delete('/api/actors/' + str(actor_to_delete.id), headers=self.producer_headers)
         self.assertEqual(res.status_code, 200)
 
         for id in movie_ids:
@@ -158,58 +170,58 @@ class CastingAgencyTestCase(unittest.TestCase):
         movie_to_delete = Movie.query.first()
         actor_ids = [actor.id for actor in movie_to_delete.actors]
 
-        res = self.client().delete('/api/movies/' + str(movie_to_delete.id))
+        res = self.client().delete('/api/movies/' + str(movie_to_delete.id), headers=self.producer_headers)
         self.assertEqual(res.status_code, 200)
 
         for id in actor_ids:
             self.assertTrue(Actor.query.get(id))
 
     def test_movies_post_400(self):
-        res = self.client().post('/api/movies', json={'title': 'should fail with 400', 'releaseDate': 'not a date'})
+        res = self.client().post('/api/movies', headers=self.producer_headers, json={'title': 'should fail with 400', 'releaseDate': 'not a date'})
         self.assertEqual(res.status_code, 400)
 
     def test_actors_post_400(self):
-        res = self.client().post('/api/actors', json={'test': 'should fail with 400'})
+        res = self.client().post('/api/actors', headers=self.producer_headers, json={'test': 'should fail with 400'})
         self.assertEqual(res.status_code, 400)
 
     def test_actors_405(self):
         actor_id = Actor.query.first().id
 
-        res = self.client().put('/api/actors/' + str(actor_id), json=self.actor_update_request)
+        res = self.client().put('/api/actors/' + str(actor_id), headers=self.producer_headers, json=self.actor_update_request)
         self.assertEqual(res.status_code, 405)
 
     def test_movies_405(self):
         movie_id = Movie.query.first().id
 
-        res = self.client().put('/api/movies/' + str(movie_id), json=self.movie_update_request)
+        res = self.client().put('/api/movies/' + str(movie_id), headers=self.producer_headers, json=self.movie_update_request)
         self.assertEqual(res.status_code, 405)
 
     def test_update_actors_422(self):
         actor_id = Actor.query.first().id
 
-        res = self.client().patch('/api/actors/' + str(actor_id), json={'movies': [9000]})
+        res = self.client().patch('/api/actors/' + str(actor_id), headers=self.producer_headers, json={'movies': [9000]})
         self.assertEqual(res.status_code, 422)
 
     def test_update_movies_422(self):
         movie_id = Movie.query.first().id
 
-        res = self.client().patch('/api/movies/' + str(movie_id), json={'actors': [9000]})
+        res = self.client().patch('/api/movies/' + str(movie_id), headers=self.producer_headers, json={'actors': [9000]})
         self.assertEqual(res.status_code, 422)
 
     def test_get_actors_404(self):
-        res = self.client().get('/api/actors?page=9000')
+        res = self.client().get('/api/actors?page=9000', headers=self.producer_headers)
         self.assertEqual(res.status_code, 404)
 
     def test_get_movies_404(self):
-        res = self.client().get('/api/movies?page=9000')
+        res = self.client().get('/api/movies?page=9000', headers=self.producer_headers)
         self.assertEqual(res.status_code, 404)
 
     def test_get_actor_404(self):
-        res = self.client().get('/api/actors/9000')
+        res = self.client().get('/api/actors/9000', headers=self.producer_headers)
         self.assertEqual(res.status_code, 404)
 
     def test_get_movie_404(self):
-        res = self.client().get('/api/movies/9000')
+        res = self.client().get('/api/movies/9000', headers=self.producer_headers)
         self.assertEqual(res.status_code, 404)    
 
 if __name__ == '__main__':
