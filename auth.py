@@ -1,5 +1,5 @@
 import json
-from flask import request, _request_ctx_stack
+from flask import request
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
@@ -10,10 +10,10 @@ ALGORITHMS = ['RS256']
 API_AUDIENCE = 'castingagency'
 
 # AuthError Exception
-'''
+"""
 AuthError Exception
 A standardized way to communicate auth failure modes
-'''
+"""
 
 
 class AuthError(Exception):
@@ -24,14 +24,14 @@ class AuthError(Exception):
 
 # Auth Header
 
-'''
+"""
 @DONE implement get_token_auth_header() method
     it should attempt to get the header from the request
         it should raise an AuthError if no header is present
     it should attempt to split bearer and the token
         it should raise an AuthError if the header is malformed
     return the token part of the header
-'''
+"""
 def get_token_auth_header():
     auth = request.headers.get('Authorization', None)
     if not auth:
@@ -63,7 +63,7 @@ def get_token_auth_header():
     return token
 
 
-'''
+"""
 @DONE implement check_permissions(permission, payload) method
     @INPUTS
         permission: string permission (i.e. 'post:drink')
@@ -74,7 +74,7 @@ def get_token_auth_header():
     it should raise an AuthError if the requested permission string is not in
     the payload permissions array
     return true otherwise
-'''
+"""
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
         raise AuthError({
@@ -90,7 +90,7 @@ def check_permissions(permission, payload):
     return True
 
 
-'''
+"""
 @DONE implement verify_decode_jwt(token) method
     @INPUTS
         token: a json web token (string)
@@ -103,7 +103,7 @@ def check_permissions(permission, payload):
 
     !!NOTE urlopen has a common certificate error described here:
     https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
-'''
+"""
 def verify_decode_jwt(token):
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
@@ -158,7 +158,7 @@ def verify_decode_jwt(token):
     }, 401)
 
 
-'''
+"""
 @DONE implement @requires_auth(permission) decorator method
     @INPUTS
         permission: string permission (i.e. 'post:drink')
@@ -169,7 +169,7 @@ def verify_decode_jwt(token):
     check the requested permission
     return the decorator which passes the decoded payload to
     the decorated method
-'''
+"""
 def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)

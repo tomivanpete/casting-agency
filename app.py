@@ -4,17 +4,14 @@ from flask_cors import CORS
 from jsonschema.exceptions import ValidationError
 
 from models import setup_db, Movie, Actor
-from util import get_schemas, schema_validator
+from schema_utils import get_schemas, schema_validator
 from auth import AuthError, requires_auth
 
 ITEMS_PER_PAGE = 10
 SCHEMAS = get_schemas()
 
-"""
-TODO: implement authentication and permission checks
-"""
 def create_app(test_config=None):
-
+    """Flask App for the Casting Agency API"""
     app = Flask(__name__)
     setup_db(app)
     CORS(app)
@@ -26,6 +23,7 @@ def create_app(test_config=None):
     @app.route('/api/actors')
     @requires_auth('get:actors')
     def get_actors(payload):
+        """Returns all Actors in the DB with 10 per page"""
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * ITEMS_PER_PAGE
         end = start + ITEMS_PER_PAGE
@@ -45,6 +43,7 @@ def create_app(test_config=None):
     @app.route('/api/movies')
     @requires_auth('get:movies')
     def get_movies(payload):
+        """Returns all Movies in the DB with 10 per page"""
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * ITEMS_PER_PAGE
         end = start + ITEMS_PER_PAGE
@@ -63,6 +62,7 @@ def create_app(test_config=None):
     @app.route('/api/actors/<int:actor_id>')
     @requires_auth('get:actor-detail')
     def get_actor(payload, actor_id):
+        """Returns an Actor with actor_id and the associated Movies"""
         actor = Actor.query.get(actor_id)
         if actor is None:
             abort(404)
@@ -76,6 +76,7 @@ def create_app(test_config=None):
     @app.route('/api/movies/<int:movie_id>')
     @requires_auth('get:movie-detail')
     def get_movie(payload, movie_id):
+        """Returns a Movie with movie_id and the associated actors"""
         movie = Movie.query.get(movie_id)
         if movie is None:
             abort(404)
@@ -89,6 +90,11 @@ def create_app(test_config=None):
     @requires_auth('post:actors')
     @schema_validator(schema=SCHEMAS['post_actor'])
     def create_actor(payload):
+        """Creates a new Actor in the DB 
+        
+        Raises a ValidationError and returns a 400 status code if
+        JSON request body does not conform to post_actor.json schema
+        """
         request_body = request.get_json()
         name = request_body['name']
         age = request_body['age']
@@ -110,6 +116,11 @@ def create_app(test_config=None):
     @requires_auth('post:movies')
     @schema_validator(schema=SCHEMAS['post_movie'])
     def create_movie(payload):
+        """Creates a new Movie in the DB
+        
+        Raises a ValidationError and returns a 400 status code if
+        JSON request body does not conform to post_movie.json schema
+        """
         request_body = request.get_json()
         title = request_body['title']
         release_date = request_body['releaseDate']
@@ -129,6 +140,11 @@ def create_app(test_config=None):
     @requires_auth('patch:actors')
     @schema_validator(schema=SCHEMAS['patch_actor'])
     def update_actor(payload, actor_id):
+        """Updates an existing Actor with actor_id
+        
+        Raises a ValidationError and returns a 400 status code if
+        JSON request body does not conform to patch_actor.json schema
+        """
         actor_to_update = Actor.query.get(actor_id)
         if actor_to_update is None:
             abort(404)
@@ -139,7 +155,7 @@ def create_app(test_config=None):
         gender = request_body.get('gender', None)
         movie_ids = request_body.get('movies', None)
 
-        # Accept update for name, age, or gender in the message body
+        # Accept update for name, age, gender, or movies in the message body
         if name:
             actor_to_update.name = name
         if age:
@@ -168,6 +184,11 @@ def create_app(test_config=None):
     @requires_auth('patch:movies')
     @schema_validator(schema=SCHEMAS['patch_movie'])
     def update_movie(payload, movie_id):
+        """Updates an existing Movie with movie_id
+        
+        Raises a ValidationError and returns a 400 status code if
+        JSON request body does not conform to patch_movie.json schema
+        """
         movie_to_update = Movie.query.get(movie_id)
         if movie_to_update is None:
             abort(404)
@@ -177,7 +198,7 @@ def create_app(test_config=None):
         release_date = request_body.get('releaseDate', None)
         actor_ids = request_body.get('actors', None)
 
-        # Accept update for title or release date in the message body
+        # Accept update for title, release date, or movies in the message body
         if title:
             movie_to_update.title = title
         if release_date:
@@ -203,6 +224,7 @@ def create_app(test_config=None):
     @app.route('/api/actors/<int:actor_id>', methods=['DELETE'])
     @requires_auth('delete:actors')
     def delete_actor(payload, actor_id):
+        """Deletes an Actor with actor_id from the DB"""
         actor = Actor.query.get(actor_id)
         if actor is None:
             abort(404)
@@ -217,6 +239,7 @@ def create_app(test_config=None):
     @app.route('/api/movies/<int:movie_id>', methods=['DELETE'])
     @requires_auth('delete:movies')
     def delete_movie(payload, movie_id):
+        """Deletes a Movie with movie_id from the DB"""
         movie = Movie.query.get(movie_id)
         if movie is None:
             abort(404)
@@ -230,7 +253,7 @@ def create_app(test_config=None):
 
     @app.errorhandler(AuthError)
     def auth_error(auth_error):
-        print(sys.exc_info())
+        """Handles AuthErrors raised when parsing the Auth0 JWT"""
         return jsonify({
             'success': False,
             'error': auth_error.status_code,
@@ -239,6 +262,7 @@ def create_app(test_config=None):
     
     @app.errorhandler(ValidationError)
     def bad_request(error):
+        """Handles ValidationErrors raised when validating the POST and PATCH schemas"""
         return jsonify({
             'success': False,
             'error': 400,
@@ -247,6 +271,7 @@ def create_app(test_config=None):
 
     @app.errorhandler(404)
     def not_found(error):
+        """Handles errors for resources not found in the app"""
         return jsonify({
             'success': False,
             'error': 404,
@@ -255,6 +280,7 @@ def create_app(test_config=None):
 
     @app.errorhandler(405)
     def method_not_allowed(error):
+        """Handles errors for request methods not allowed"""
         return jsonify({
             'success': False,
             'error': 405,
@@ -263,6 +289,7 @@ def create_app(test_config=None):
 
     @app.errorhandler(422)
     def unprocessable_entity(error):
+        """Handles errors for valid request body that cannot be processed"""
         return jsonify({
             'success': False,
             'error': 422,
@@ -271,6 +298,7 @@ def create_app(test_config=None):
 
     @app.errorhandler(500)
     def server_error(error):
+        """Handles all other app exceptions"""
         print(sys.exc_info())
         return jsonify({
             'success': False,
