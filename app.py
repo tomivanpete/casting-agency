@@ -21,7 +21,7 @@ def create_app(test_config=None):
         return 'App is online'
 
     @app.route('/api/actors')
-    @requires_auth('get:actors')
+    @requires_auth('get:actors', test_config)
     def get_actors(payload):
         """Returns all Actors in the DB with 10 per page"""
         page = request.args.get('page', 1, type=int)
@@ -41,7 +41,7 @@ def create_app(test_config=None):
 
 
     @app.route('/api/movies')
-    @requires_auth('get:movies')
+    @requires_auth('get:movies', test_config)
     def get_movies(payload):
         """Returns all Movies in the DB with 10 per page"""
         page = request.args.get('page', 1, type=int)
@@ -60,7 +60,7 @@ def create_app(test_config=None):
         })
     
     @app.route('/api/actors/<int:actor_id>')
-    @requires_auth('get:actor-detail')
+    @requires_auth('get:actor-detail', test_config)
     def get_actor(payload, actor_id):
         """Returns an Actor with actor_id and the associated Movies"""
         actor = Actor.query.get(actor_id)
@@ -74,7 +74,7 @@ def create_app(test_config=None):
 
     
     @app.route('/api/movies/<int:movie_id>')
-    @requires_auth('get:movie-detail')
+    @requires_auth('get:movie-detail', test_config)
     def get_movie(payload, movie_id):
         """Returns a Movie with movie_id and the associated actors"""
         movie = Movie.query.get(movie_id)
@@ -87,7 +87,7 @@ def create_app(test_config=None):
         })
     
     @app.route('/api/actors', methods=['POST'])
-    @requires_auth('post:actors')
+    @requires_auth('post:actors', test_config)
     @schema_validator(schema=SCHEMAS['post_actor'])
     def create_actor(payload):
         """Creates a new Actor in the DB 
@@ -113,7 +113,7 @@ def create_app(test_config=None):
         }), 201
     
     @app.route('/api/movies', methods=['POST'])
-    @requires_auth('post:movies')
+    @requires_auth('post:movies', test_config)
     @schema_validator(schema=SCHEMAS['post_movie'])
     def create_movie(payload):
         """Creates a new Movie in the DB
@@ -137,7 +137,7 @@ def create_app(test_config=None):
         }), 201
     
     @app.route('/api/actors/<int:actor_id>', methods=['PATCH'])
-    @requires_auth('patch:actors')
+    @requires_auth('patch:actors', test_config)
     @schema_validator(schema=SCHEMAS['patch_actor'])
     def update_actor(payload, actor_id):
         """Updates an existing Actor with actor_id
@@ -181,7 +181,7 @@ def create_app(test_config=None):
         })
     
     @app.route('/api/movies/<int:movie_id>', methods=['PATCH'])
-    @requires_auth('patch:movies')
+    @requires_auth('patch:movies', test_config)
     @schema_validator(schema=SCHEMAS['patch_movie'])
     def update_movie(payload, movie_id):
         """Updates an existing Movie with movie_id
@@ -222,7 +222,7 @@ def create_app(test_config=None):
         })
     
     @app.route('/api/actors/<int:actor_id>', methods=['DELETE'])
-    @requires_auth('delete:actors')
+    @requires_auth('delete:actors', test_config)
     def delete_actor(payload, actor_id):
         """Deletes an Actor with actor_id from the DB"""
         actor = Actor.query.get(actor_id)
@@ -237,7 +237,7 @@ def create_app(test_config=None):
         })
 
     @app.route('/api/movies/<int:movie_id>', methods=['DELETE'])
-    @requires_auth('delete:movies')
+    @requires_auth('delete:movies', test_config)
     def delete_movie(payload, movie_id):
         """Deletes a Movie with movie_id from the DB"""
         movie = Movie.query.get(movie_id)
