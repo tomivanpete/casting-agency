@@ -24,6 +24,9 @@ def get_schemas():
 def schema_validator(schema=''):
     """Decorator to validate JSON request bodies against the schema
     
+    Args:
+        schema: The JSON schema with which to validate the request body.
+        
     Raises:
         ValidationError: An error occurred validating the JSON request body against the schema
     """

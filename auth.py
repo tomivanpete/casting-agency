@@ -9,30 +9,25 @@ AUTH0_DOMAIN = 'dev-tx59k7ac.us.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'castingagency'
 
-# AuthError Exception
-"""
-AuthError Exception
-A standardized way to communicate auth failure modes
-"""
-
-
 class AuthError(Exception):
+    """A standardized way to communicate auth failure modes.
+
+    Attributes:
+        error: Error message describing the failure.
+        status_code: HTTP status code representing the failure.
+    """
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
 
 
-# Auth Header
-
-"""
-@DONE implement get_token_auth_header() method
-    it should attempt to get the header from the request
-        it should raise an AuthError if no header is present
-    it should attempt to split bearer and the token
-        it should raise an AuthError if the header is malformed
-    return the token part of the header
-"""
 def get_token_auth_header():
+    """Attempts to get the bearer token from the request headers.
+
+    Raises:
+        AuthError: If no Authorization header is found, or if the
+        request header is malformed.
+    """
     auth = request.headers.get('Authorization', None)
     if not auth:
         raise AuthError({
@@ -62,49 +57,21 @@ def get_token_auth_header():
     token = parts[1]
     return token
 
+def verify_decode_jwt(token):
+    """Decodes a JWT from Auth0.
 
-"""
-@DONE implement check_permissions(permission, payload) method
-    @INPUTS
-        permission: string permission (i.e. 'post:drink')
-        payload: decoded jwt payload
+    Args:
+        token: A JSON web token string.
 
-    it should raise an AuthError if permissions are not included in the payload
-        !!NOTE check your RBAC settings in Auth0
-    it should raise an AuthError if the requested permission string is not in
-    the payload permissions array
-    return true otherwise
-"""
-def check_permissions(permission, payload):
-    if 'permissions' not in payload:
-        raise AuthError({
-            'code': 'invalid_claims',
-            'description': 'Permissions not included in JWT'
-        }, 403)
+    Returns:
+        The decoded JWT payload.
 
-    if permission not in payload['permissions']:
-        raise AuthError({
-            'code': 'unauthorized',
-            'description': 'Permission not found'
-        }, 403)
-    return True
-
-
-"""
-@DONE implement verify_decode_jwt(token) method
-    @INPUTS
-        token: a json web token (string)
-
-    it should be an Auth0 token with key id (kid)
-    it should verify the token using Auth0 /.well-known/jwks.json
-    it should decode the payload from the token
-    it should validate the claims
-    return the decoded payload
+    Raises:
+        AuthError: If the JWT is malformed, expired, or not valid for the given Auth0 domain/application.
 
     !!NOTE urlopen has a common certificate error described here:
     https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
-"""
-def verify_decode_jwt(token):
+    """
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
     unverified_header = jwt.get_unverified_header(token)
@@ -157,20 +124,44 @@ def verify_decode_jwt(token):
                 'description': 'Unable to find the appropriate key.'
     }, 401)
 
+def check_permissions(permission, payload):
+    """Verifies permissions in a JWT payload.
 
-"""
-@DONE implement @requires_auth(permission) decorator method
-    @INPUTS
-        permission: string permission (i.e. 'post:drink')
+    Args:
+        permission: The string permission to verify.
+        payload: A decoded JWT payload.
 
-    it should use the get_token_auth_header method to get the token
-    it should use the verify_decode_jwt method to decode the jwt
-    it should use the check_permissions method validate claims and
-    check the requested permission
-    return the decorator which passes the decoded payload to
-    the decorated method
-"""
+    Returns:
+        True if the given permission is in the JWT payload.
+
+    Raises:
+        AuthError: If the payload does not contain any permissions, or
+        if the given permission is not included in the payload.
+    """
+    if 'permissions' not in payload:
+        raise AuthError({
+            'code': 'invalid_claims',
+            'description': 'Permissions not included in JWT'
+        }, 403)
+
+    if permission not in payload['permissions']:
+        raise AuthError({
+            'code': 'unauthorized',
+            'description': 'Permission not found'
+        }, 403)
+    return True
+
+
 def requires_auth(permission='', test_config=False):
+    """Decorator method that checks for the given permission in the request.
+
+    Args:
+        permission: The permission to validate.
+        test_config: Boolean flag used to bypass authorization checks during unit tests.
+
+    Raises:
+        AuthError: If the permission is not found, or parsing the Authorization header fails.
+    """
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):

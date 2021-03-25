@@ -16,14 +16,27 @@ def create_app(test_config=None):
     setup_db(app)
     CORS(app)
 
-    @app.route('/')
-    def alive():
-        return 'App is online'
+    @app.route('/api/healthcheck')
+    def healthcheck():
+        return jsonify({
+            'status': 'available',
+        })
 
     @app.route('/api/actors')
     @requires_auth('get:actors', test_config)
     def get_actors(payload):
-        """Returns all Actors in the DB with 10 per page"""
+        """Fetches all rows from the Actor table.
+
+        Requires the 'get:actors' permission in the JWT Bearer authentication.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+
+        Returns:
+            A JSON representation of all Actors in the DB paginated at 10 per page.
+            The query string 'page' can be added to the URI to return the next
+            set of 10.
+        """
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * ITEMS_PER_PAGE
         end = start + ITEMS_PER_PAGE
@@ -43,7 +56,18 @@ def create_app(test_config=None):
     @app.route('/api/movies')
     @requires_auth('get:movies', test_config)
     def get_movies(payload):
-        """Returns all Movies in the DB with 10 per page"""
+        """Fetches all rows from the Movie table.
+
+        Requires the 'get:movies' permission in the JWT Bearer authentication.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+
+        Returns:
+            A JSON representation of all Movies in the DB paginated at 10 per page.
+            The query string 'page' can be added to the URI to return the next
+            set of 10.
+        """
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * ITEMS_PER_PAGE
         end = start + ITEMS_PER_PAGE
@@ -62,7 +86,17 @@ def create_app(test_config=None):
     @app.route('/api/actors/<int:actor_id>')
     @requires_auth('get:actor-detail', test_config)
     def get_actor(payload, actor_id):
-        """Returns an Actor with actor_id and the associated Movies"""
+        """Fetches a row with actor_id from the Actor table.
+
+        Requires the 'get:actor-detail' permission in the JWT Bearer authentication.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+            actor_id: The primary key for the Actor.
+
+        Returns:
+            A JSON representation of the Actor with actor_id
+        """
         actor = Actor.query.get(actor_id)
         if actor is None:
             abort(404)
@@ -76,7 +110,17 @@ def create_app(test_config=None):
     @app.route('/api/movies/<int:movie_id>')
     @requires_auth('get:movie-detail', test_config)
     def get_movie(payload, movie_id):
-        """Returns a Movie with movie_id and the associated actors"""
+        """Fetches a row with Movie_id from the Movie table.
+
+        Requires the 'get:movie-detail' permission in the JWT Bearer authentication.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+            movie_id: The primary key for the Movie.
+
+        Returns:
+            A JSON representation of the Movie with movie_id
+        """
         movie = Movie.query.get(movie_id)
         if movie is None:
             abort(404)
@@ -88,12 +132,18 @@ def create_app(test_config=None):
     
     @app.route('/api/actors', methods=['POST'])
     @requires_auth('post:actors', test_config)
-    @schema_validator(schema=SCHEMAS['post_actor'])
+    @schema_validator(SCHEMAS['post_actor'])
     def create_actor(payload):
-        """Creates a new Actor in the DB 
-        
-        Raises a ValidationError and returns a 400 status code if
-        JSON request body does not conform to post_actor.json schema
+        """Inserts a new row in the Actor table.
+
+        Requires the 'post:actors' permission in the JWT Bearer authentication.
+        JSON request body must be valid against the post_actor.json schema.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+
+        Returns:
+            A JSON response indicating success and the ID of the created Actor.
         """
         request_body = request.get_json()
         name = request_body['name']
@@ -114,12 +164,18 @@ def create_app(test_config=None):
     
     @app.route('/api/movies', methods=['POST'])
     @requires_auth('post:movies', test_config)
-    @schema_validator(schema=SCHEMAS['post_movie'])
+    @schema_validator(SCHEMAS['post_movie'])
     def create_movie(payload):
-        """Creates a new Movie in the DB
-        
-        Raises a ValidationError and returns a 400 status code if
-        JSON request body does not conform to post_movie.json schema
+        """Inserts a new row in the Movie table.
+
+        Requires the 'post:movies' permission in the JWT Bearer authentication.
+        JSON request body must be valid against the post_movie.json schema.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+
+        Returns:
+            A JSON response indicating success and the ID of the created Movie.
         """
         request_body = request.get_json()
         title = request_body['title']
@@ -138,12 +194,19 @@ def create_app(test_config=None):
     
     @app.route('/api/actors/<int:actor_id>', methods=['PATCH'])
     @requires_auth('patch:actors', test_config)
-    @schema_validator(schema=SCHEMAS['patch_actor'])
+    @schema_validator(SCHEMAS['patch_actor'])
     def update_actor(payload, actor_id):
-        """Updates an existing Actor with actor_id
-        
-        Raises a ValidationError and returns a 400 status code if
-        JSON request body does not conform to patch_actor.json schema
+        """Updates an existing row with actor_id in the Actor table.
+
+        Requires the 'patch:actors' permission in the JWT Bearer authentication.
+        JSON request body must be valid against the patch_actor.json schema.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+            actor_id: The primary key for the Actor.
+
+        Returns:
+            An updated JSON representation of the Actor.
         """
         actor_to_update = Actor.query.get(actor_id)
         if actor_to_update is None:
@@ -182,12 +245,19 @@ def create_app(test_config=None):
     
     @app.route('/api/movies/<int:movie_id>', methods=['PATCH'])
     @requires_auth('patch:movies', test_config)
-    @schema_validator(schema=SCHEMAS['patch_movie'])
+    @schema_validator(SCHEMAS['patch_movie'])
     def update_movie(payload, movie_id):
-        """Updates an existing Movie with movie_id
-        
-        Raises a ValidationError and returns a 400 status code if
-        JSON request body does not conform to patch_movie.json schema
+        """Updates an existing row with movie_id in the Movie table.
+
+        Requires the 'patch:movies' permission in the JWT Bearer authentication.
+        JSON request body must be valid against the patch_movie.json schema.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+            movie_id: The primary key for the Movie.
+
+        Returns:
+            An updated JSON representation of the Movie.
         """
         movie_to_update = Movie.query.get(movie_id)
         if movie_to_update is None:
@@ -224,7 +294,17 @@ def create_app(test_config=None):
     @app.route('/api/actors/<int:actor_id>', methods=['DELETE'])
     @requires_auth('delete:actors', test_config)
     def delete_actor(payload, actor_id):
-        """Deletes an Actor with actor_id from the DB"""
+        """Deletes a row with actor_id in the Actor table.
+
+        Requires the 'delete:actors' permission in the JWT Bearer authentication.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+            actor_id: The primary key of the Actor.
+
+        Returns:
+            A JSON response indicating success and the ID of the deleted Actor.
+        """
         actor = Actor.query.get(actor_id)
         if actor is None:
             abort(404)
@@ -239,7 +319,17 @@ def create_app(test_config=None):
     @app.route('/api/movies/<int:movie_id>', methods=['DELETE'])
     @requires_auth('delete:movies', test_config)
     def delete_movie(payload, movie_id):
-        """Deletes a Movie with movie_id from the DB"""
+        """Deletes a row with movie_id in the Movie table.
+
+        Requires the 'delete:movies' permission in the JWT Bearer authentication.
+
+        Args:
+            payload: A validated JWT for the Casting Agency app.
+            movie_id: The primary key of the Movie.
+
+        Returns:
+            A JSON response indicating success and the ID of the deleted Movie.
+        """
         movie = Movie.query.get(movie_id)
         if movie is None:
             abort(404)
