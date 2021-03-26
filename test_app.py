@@ -36,7 +36,7 @@ class CastingAgencyTestCase(unittest.TestCase):
 
     def create_test_data(self):
         """Creates new data for the test DB using the Faker library."""
-        fake = Faker(['en_US', 'ja_JP', 'el_GR'])
+        fake = Faker(['en_US', 'ja_JP', 'el_GR', 'de_DE'])
 
         self.actor_request = {
             'name': fake.name(),
