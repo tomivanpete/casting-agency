@@ -1,8 +1,12 @@
 # Casting Agency API
 
+This app is hosted on Heroku:
+
+https://tomivanpete-casting-agency.herokuapp.com/
+
 ## Getting Started with Local Development
 
-### Installing Key Dependencies
+### Install Key Dependencies
 
 [Python 3.9](https://docs.python.org/3/using/unix.html#getting-and-installing-the-latest-version-of-python)
 
@@ -27,9 +31,23 @@ source env/bin/activate
 
 More details on virtural environments can be found in the [python docs](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
 
+
+### Local Environment Settings
+
+Create a file `.env` in the root project directory with the following content:
+```bash
+export APP_SETTINGS="config.DevelopmentConfig"
+export DATABASE_URL="postgres://localhost:5432/casting-agency"
+export FLASK_APP=app.py
+export FLASK_ENV=development
+
+```
+Run `source .env` to activate the environment variables.
+
+
 ### PIP Dependencies
 
-Once you have your virtual environment setup and running, install dependencies by naviging to the `/backend` directory and running:
+Once you have your virtual environment setup and running, install dependencies by running:
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -47,13 +65,11 @@ Run `flask db migrate` to update the database schema.
 
 ## Running the server
 
-From within the `backend` directory first ensure you are working using your created virtual environment.
+First ensure you are working using your created virtual environment and the above steps have been completed.
 
 To run the server, execute:
 
 ```bash
-export FLASK_APP=app.py
-export FLASK_ENV=development
 flask run
 ```
 
@@ -62,13 +78,13 @@ Setting the `FLASK_ENV` variable to `development` will detect file changes and r
 Setting the `FLASK_APP` variable to the `app.py` file to find the application. 
 
 ## Testing
-To execute the tests, run
+To execute the tests, run the following:
 ```
 python3 test_app.py
 ```
 Test data is created for each execution using the [Faker](https://faker.readthedocs.io/en/master/) library. 
 
-## API Endpoints
+# API Endpoints
 
 #### Common Behavior
 - Each endpoint will return `{'success': true}` in the response body following successful processing of the request.
