@@ -3,8 +3,9 @@ from functools import wraps
 from jsonschema import validate, FormatChecker
 from flask import request
 
+
 def get_schemas():
-    """Returns a dictionary of JSON schemas located in the schemas/ directory"""
+    """Returns a dictionary of JSON schemas from the schemas/ directory."""
     schemas = {}
 
     with open('schemas/post_actor.json') as f:
@@ -21,14 +22,16 @@ def get_schemas():
 
     return schemas
 
+
 def schema_validator(schema=''):
     """Decorator to validate JSON request bodies against the schema
-    
+
     Args:
         schema: The JSON schema with which to validate the request body.
-        
+
     Raises:
-        ValidationError: An error occurred validating the JSON request body against the schema
+        ValidationError: An error occurred validating the JSON request body
+                         against the schema.
     """
     def schema_validator_decorator(f):
         @wraps(f)

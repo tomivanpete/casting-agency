@@ -10,6 +10,7 @@ ALGORITHMS = ['RS256']
 API_AUDIENCE = 'castingagency'
 CLIENT_ID = 'pu4pYwaoNzPFl524FBZbkkNattcO6rN9'
 
+
 class AuthError(Exception):
     """A standardized way to communicate auth failure modes.
 
@@ -17,6 +18,7 @@ class AuthError(Exception):
         error: Error message describing the failure.
         status_code: HTTP status code representing the failure.
     """
+
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
@@ -58,6 +60,7 @@ def get_token_auth_header():
     token = parts[1]
     return token
 
+
 def verify_decode_jwt(token):
     """Decodes a JWT from Auth0.
 
@@ -68,7 +71,8 @@ def verify_decode_jwt(token):
         The decoded JWT payload.
 
     Raises:
-        AuthError: If the JWT is malformed, expired, or not valid for the given Auth0 domain/application.
+        AuthError: If the JWT is malformed, expired, or not valid for
+        the given Auth0 domain/application.
 
     !!NOTE urlopen has a common certificate error described here:
     https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
@@ -125,6 +129,7 @@ def verify_decode_jwt(token):
                 'description': 'Unable to find the appropriate key.'
     }, 401)
 
+
 def check_permissions(permission, payload):
     """Verifies permissions in a JWT payload.
 
@@ -136,8 +141,8 @@ def check_permissions(permission, payload):
         True if the given permission is in the JWT payload.
 
     Raises:
-        AuthError: If the payload does not contain any permissions, or
-        if the given permission is not included in the payload.
+        AuthError: If the payload does not contain any permissions, or if
+                   the given permission is not included in the payload.
     """
     if 'permissions' not in payload:
         raise AuthError({
@@ -158,10 +163,12 @@ def requires_auth(permission='', test_config=False):
 
     Args:
         permission: The permission to validate.
-        test_config: Boolean flag used to bypass authorization checks during unit tests.
+        test_config: Boolean flag used to bypass authorization
+                     checks during unit tests.
 
     Raises:
-        AuthError: If the permission is not found, or parsing the Authorization header fails.
+        AuthError: If the permission is not found,
+                   or parsing the Authorization header fails.
     """
     def requires_auth_decorator(f):
         @wraps(f)

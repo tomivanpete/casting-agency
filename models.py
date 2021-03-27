@@ -6,6 +6,7 @@ database_path = os.environ['DATABASE_URL']
 
 db = SQLAlchemy()
 
+
 def setup_db(app, database_path=database_path):
     """Binds a Flask App and a SQLAlchemy service"""
     app.config['SQLALCHEMY_DATABASE_URI'] = database_path
@@ -14,11 +15,15 @@ def setup_db(app, database_path=database_path):
     db.init_app(app)
     db.create_all()
 
+
 """Creates a many-to-many association for Movies and Actors"""
-movie_actors = db.Table('movie_actors',
-    db.Column('actor_id', db.Integer, db.ForeignKey('actor.id', ondelete='CASCADE'), primary_key=True),
-    db.Column('movie_id', db.Integer, db.ForeignKey('movie.id', ondelete='CASCADE'), primary_key=True)
-)
+movie_actors = db.Table(
+    'movie_actors', db.Column(
+        'actor_id', db.Integer, db.ForeignKey(
+            'actor.id', ondelete='CASCADE'), primary_key=True), db.Column(
+                'movie_id', db.Integer, db.ForeignKey(
+                    'movie.id', ondelete='CASCADE'), primary_key=True))
+
 
 class Movie(db.Model):
     """A class to represent a Movie
@@ -34,12 +39,17 @@ class Movie(db.Model):
     id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
     release_date = Column(Date, nullable=False)
-    actors = db.relationship('Actor', secondary=movie_actors, back_populates='movies', cascade='all, delete', passive_deletes=True)
+    actors = db.relationship(
+        'Actor',
+        secondary=movie_actors,
+        back_populates='movies',
+        cascade='all, delete',
+        passive_deletes=True)
 
     def __init__(self, title, release_date):
         self.title = title
         self.release_date = release_date
-    
+
     def get_data(self):
         """Returns a dictionary representation of the Movie"""
         return {
@@ -47,23 +57,23 @@ class Movie(db.Model):
             'title': self.title,
             'releaseDate': str(self.release_date)
         }
-    
+
     def get_data_with_actors(self):
-        """Returns a dictionary representation of the Movie with associated Actors"""
+        """Returns a dictionary representation of the Movie with Actors."""
         formatted_actors = [actor.get_data() for actor in self.actors]
-        
+
         return {
             'id': self.id,
             'title': self.title,
             'releaseDate': str(self.release_date),
             'actors': formatted_actors
         }
-        
+
     def insert(self):
         """Inserts the Movie into the DB"""
         db.session.add(self)
         db.session.commit()
-    
+
     def update(self):
         """Updates the DB with the current representation of the Movie"""
         db.session.commit()
@@ -90,13 +100,18 @@ class Actor(db.Model):
     name = Column(String, nullable=False)
     age = Column(Integer, nullable=False)
     gender = Column(Enum('M', 'F', name='gender_types'))
-    movies = db.relationship('Movie', secondary=movie_actors, back_populates='actors', cascade='all, delete', passive_deletes=True)
+    movies = db.relationship(
+        'Movie',
+        secondary=movie_actors,
+        back_populates='actors',
+        cascade='all, delete',
+        passive_deletes=True)
 
     def __init__(self, name, age, gender):
         self.name = name
         self.age = age
         self.gender = gender
-    
+
     def get_data(self):
         """Returns a dictionary representation of the Actor"""
         return {
@@ -105,9 +120,9 @@ class Actor(db.Model):
             'age': self.age,
             'gender': self.gender
         }
-    
+
     def get_data_with_movies(self):
-        """Returns a dictionary representation of the Actor with associated Movies"""
+        """Returns a dictionary representation of the Actor with Movies."""
         formatted_movies = [movie.get_data() for movie in self.movies]
 
         return {
@@ -122,7 +137,7 @@ class Actor(db.Model):
         """Inserts the Actor into the DB"""
         db.session.add(self)
         db.session.commit()
-    
+
     def update(self):
         """Updates the DB with the current representation of the Actor"""
         db.session.commit()
