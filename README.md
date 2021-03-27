@@ -1,8 +1,24 @@
 # Casting Agency API
 
-This app is hosted on Heroku:
+This app is a service for managing Actor and Movie relationships for a casting agency.
+
+The API is hosted live on Heroku:
 
 https://tomivanpete-casting-agency.herokuapp.com/
+
+The API uses role-based access control with the following user types:
+
+- Casting Assistant
+    - Can view actors and movies
+
+- Casting Director
+    - All permissions from Casting Assistant.
+    - Add or delete an actor from the database.
+    - Modify actors or movies
+
+- Executive Producer
+    - All permissions from Casting Director.
+    - Add or delete a movie from the database.
 
 ## Getting Started with Local Development
 
@@ -79,7 +95,7 @@ Setting the `FLASK_APP` variable to the `app.py` file to find the application.
 
 ## Testing
 To execute the tests, run the following:
-```
+```bash
 python3 test_app.py
 ```
 Test data is created for each execution using the [Faker](https://faker.readthedocs.io/en/master/) library. 
