@@ -8,6 +8,7 @@ from urllib.request import urlopen
 AUTH0_DOMAIN = 'dev-tx59k7ac.us.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'castingagency'
+CLIENT_ID = 'pu4pYwaoNzPFl524FBZbkkNattcO6rN9'
 
 class AuthError(Exception):
     """A standardized way to communicate auth failure modes.

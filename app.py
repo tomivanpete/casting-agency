@@ -1,5 +1,5 @@
-import sys
-from flask import Flask, request, jsonify, abort
+import os, sys
+from flask import Flask, request, jsonify, abort, redirect
 from flask_cors import CORS
 from jsonschema.exceptions import ValidationError
 
@@ -13,11 +13,18 @@ SCHEMAS = get_schemas()
 def create_app(test_config=None):
     """Flask App for the Casting Agency API"""
     app = Flask(__name__)
+    app.config.from_object(os.environ['APP_SETTINGS'])
     setup_db(app)
     CORS(app)
 
+    @app.route('/')
+    def login():
+        """Redirect to the Auth0 login page for the app."""
+        return redirect(app.config['AUTH0_LOGIN'])
+    
     @app.route('/api/healthcheck')
     def healthcheck():
+        """Returns 200 when the app is online."""
         return jsonify({
             'status': 'available',
         })

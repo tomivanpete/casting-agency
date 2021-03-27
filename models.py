@@ -1,9 +1,8 @@
+import os
 from sqlalchemy import Column, String, Integer, Date, Enum
 from flask_sqlalchemy import SQLAlchemy
 
-database_name = "casting-agency"
-database_path = "postgres://{}/{}".format('localhost:5432', database_name)
-#database_path = os.environ['DATABASE_URL']
+database_path = os.environ['DATABASE_URL']
 
 db = SQLAlchemy()
 
