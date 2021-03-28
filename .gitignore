@@ -3,6 +3,7 @@ __pycache__
 venv
 specifications.txt
 .env
+data-load
 
 # OS generated files #
 ######################

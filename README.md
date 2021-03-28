@@ -6,7 +6,7 @@ The API is hosted live on Heroku:
 
 https://tomivanpete-casting-agency.herokuapp.com/
 
-The API uses role-based access control with the following user types:
+The API uses role-based access control with [Auth0](https://auth0.com) for the following user types:
 
 - Casting Assistant
     - Can view actors and movies
@@ -56,6 +56,10 @@ export APP_SETTINGS="config.DevelopmentConfig"
 export DATABASE_URL="postgres://localhost:5432/casting-agency"
 export FLASK_APP=app.py
 export FLASK_ENV=development
+export AUTH0_DOMAIN="YOUR_AUTH0_DOMAIN"
+export ALGORITHMS="YOUR_AUTH0_ALGORIT"
+export API_AUDIENCE="YOUR_AUTH0_API_AUDIENCE"
+export CLIENT_ID="YOUR_AUTH0_CLIENT_ID"
 
 ```
 Run `source .env` to activate the environment variables.

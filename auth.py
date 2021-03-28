@@ -1,3 +1,4 @@
+import os
 import json
 from flask import request
 from functools import wraps
@@ -5,10 +6,10 @@ from jose import jwt
 from urllib.request import urlopen
 
 
-AUTH0_DOMAIN = 'dev-tx59k7ac.us.auth0.com'
-ALGORITHMS = ['RS256']
-API_AUDIENCE = 'castingagency'
-CLIENT_ID = 'pu4pYwaoNzPFl524FBZbkkNattcO6rN9'
+AUTH0_DOMAIN = os.environ['AUTH0_DOMAIN']
+ALGORITHMS = os.environ['ALGORITHMS']
+API_AUDIENCE = os.environ['API_AUDIENCE']
+CLIENT_ID = os.environ['CLIENT_ID']
 
 
 class AuthError(Exception):
