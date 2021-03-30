@@ -57,7 +57,7 @@ export DATABASE_URL="postgres://localhost:5432/casting-agency"
 export FLASK_APP=app.py
 export FLASK_ENV=development
 export AUTH0_DOMAIN="YOUR_AUTH0_DOMAIN"
-export ALGORITHMS="YOUR_AUTH0_ALGORIT"
+export ALGORITHMS="YOUR_AUTH0_ALGORITHM"
 export API_AUDIENCE="YOUR_AUTH0_API_AUDIENCE"
 export CLIENT_ID="YOUR_AUTH0_CLIENT_ID"
 
@@ -93,9 +93,6 @@ To run the server, execute:
 flask run
 ```
 
-Setting the `FLASK_ENV` variable to `development` will detect file changes and restart the server automatically.
-
-Setting the `FLASK_APP` variable to the `app.py` file to find the application. 
 
 ## Testing
 To execute the tests, run the following:
